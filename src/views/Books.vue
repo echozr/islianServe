@@ -22,38 +22,15 @@
         </el-col>
       </el-form-item>
       <el-form-item label="添加图片">
-        <el-upload action="#"  list-type="picture-card" :limit="1" :auto-upload="false" style="float:left">
-          <i slot="default" class="el-icon-plus"></i>
-          <div slot="file" slot-scope="{file}">
-            <img  class="el-upload-list__item-thumbnail" :src="bgImage" alt="" >
-            <span class="el-upload-list__item-actions">
-              <span  class="el-upload-list__item-preview"  @click="handlePictureCardPreview(file)" >
-                <i class="el-icon-zoom-in"></i>
-              </span>
-              <span  v-if="!disabled"   class="el-upload-list__item-delete"  @click="handleDownload(file)">
-                <i class="el-icon-download"></i>
-              </span>
-              <span v-if="!disabled" class="el-upload-list__item-delete"  @click="handleRemove(file)" >
-                <i class="el-icon-delete"></i>
-              </span>
-            </span>
-          </div>
+        <el-upload class="avatar-uploader" :headers="headers"  action="/api/upload/fileImg" :show-file-list="false"  accept="image/*" :on-success="upSuccess">
+          <img v-if="form.bgImage" :src="form.bgImage" class="avatar">
+          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
         </el-upload>
       </el-form-item>
       <el-form-item label="添加资源" v-show="form.addType === 'music' || form.addType === 'video'">
-        <el-upload  action="#"  list-type="picture-card"  :auto-upload="false" style="float:left">
-          <i slot="default" class="el-icon-plus"></i>
-          <div slot="file" slot-scope="{file}">
-            <img v-if="file.raw.type==='audio/mp3'" class="el-upload-list__item-thumbnail" src="" alt="" >
-            <span class="el-upload-list__item-actions">
-              <span v-if="!disabled"  class="el-upload-list__item-delete" @click="handleDownload(file)">
-                <i class="el-icon-download"></i>
-              </span>
-              <span v-if="!disabled" class="el-upload-list__item-delete" @click="handleRemove(file)">
-                <i class="el-icon-delete"></i>
-              </span>
-            </span>
-          </div>
+        <el-upload class="avatar-uploader" :headers="headers"  action="/api/upload/fileImg" :show-file-list="false"  accept="audio/mp3 ,audio/mp4, video/mp4  " :on-success="upSuccess">
+          <video v-if="form.resources"  :src="form.resources" controls="controls" />
+          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
         </el-upload>
       </el-form-item>
       <div v-show="form.addType === 'book'">
@@ -96,6 +73,7 @@ export default {
   name: 'home',
   data () {
     return {
+      type: '',
       form: {
         title: '',
         content: '',
@@ -112,7 +90,10 @@ export default {
       },
       dialogImageUrl: '',
       dialogVisible: false,
-      disabled: false
+      disabled: false,
+      headers: {
+        Authorization: 'Bearer ' + sessionStorage.getItem('token')
+      }
     }
   },
   methods: {
@@ -126,6 +107,15 @@ export default {
     handleDownload (file) {
       console.log(file)
     },
+    upSuccess (res, file) {
+      this.type = file.raw.type
+      if (this.type.indexOf('image/') > -1) {
+        this.form.bgImage = res.data.url
+      } else {
+        this.form.resources = res.data.url
+      }
+      console.log(file)
+    },
     onSubmit () {
       console.log(this.data.form)
     }
@@ -137,4 +127,27 @@ export default {
 .home{
   padding: 30px;
 }
+.avatar-uploader .el-upload {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 178px;
+    height: 178px;
+    line-height: 178px;
+    text-align: center;
+  }
+  .avatar {
+    width: 178px;
+    height: 178px;
+    display: block;
+  }
 </style>
