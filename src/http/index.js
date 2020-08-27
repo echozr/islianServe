@@ -59,9 +59,6 @@ const errorHandle = (status, other) => {
     case 404:
       toError()
       break
-    default:
-      toError()
-      console.log(other)
   }
 }
 
