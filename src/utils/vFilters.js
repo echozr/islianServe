@@ -57,6 +57,22 @@ const vFilter = {
         break
     }
     return text
+  },
+  getBookType (value) {
+    let text
+    switch (Number(value)) {
+      case 100:
+        text = '精装'
+        break
+      case 200:
+        text = '普装'
+        break
+    }
+    return text
+  },
+  showText (value) {
+    const text = value.substring(0, 45)
+    return `${text}...`
   }
 
 }

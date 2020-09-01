@@ -4,8 +4,8 @@
     <div class="container">
       <div class="handle-box">
         <el-form :inline="true" :model="formInline" class="demo-form-inline">
-          <el-form-item label="名称">
-            <el-input v-model="formInline.title" placeholder="输入名称"></el-input>
+          <el-form-item label="标题">
+            <el-input v-model="formInline.title" placeholder="输入标题"></el-input>
           </el-form-item>
           <el-form-item label="选择类型">
             <el-select v-model="formInline.type" placeholder="选择类型">
@@ -25,7 +25,7 @@
             <el-button type="primary" @click="onSubmit">查询</el-button>
           </el-form-item>
         </el-form>
-        <el-button type="success" size="medium" @click="handleAdd"><i class="el-icon-plus el-icon--left"></i>创建期刊</el-button>
+        <el-button type="success" size="medium" @click="handleAdd"><i class="el-icon-plus el-icon--left"></i>添加期刊</el-button>
       </div>
       <el-table :data="tableData"  border  class="table" ref="multipleTable"  header-cell-class-name="table-header" >
           <el-table-column type="index"  :index="indexMethod" label="序号" width="50" align="center"></el-table-column>
@@ -165,10 +165,17 @@ export default {
     // 获取列表
     async getPopularList (params) {
       const _this = this
+      const loading = this.$loading({
+        lock: true,
+        text: 'Loading',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      })
       const result = await this.$tools.awaitWrap(this.$axios.popular.getPopularList(params), _this)
       if (result.data) {
         const { data, code } = result.data
         if (code === 200) {
+          loading.close()
           this.tableData = data.list
           this.total = data.total
           this.formInline.count = data.count

@@ -21,18 +21,18 @@
       </el-form-item>
       <el-form-item label="添加图片" prop="bgImage">
         <el-upload class="avatar-uploader" :headers="headers"  action="/api/upload/addFile" :show-file-list="false"  accept="image/*" :on-success="upSuccess">
-          <img v-if="form.bgImage" :src="form.bgImage" class="avatar">
+          <img v-if="showImage || form.bgImage" :src="form.bgImage" class="avatar">
           <i v-else class="el-icon-plus avatar-uploader-icon"></i>
         </el-upload>
       </el-form-item>
-      <el-form-item label="添加资源" v-show="form.addType === '300' || form.addType === '500'" prop="resources">
+      <el-form-item label="添加资源" v-show="form.addType === 300 || form.addType === 500" prop="resources">
         <el-upload class="avatar-uploader2" :headers="headers"  action="/api/upload/addFile" :show-file-list="false"  accept="audio/mp3 ,audio/mp4, video/mp4  " :on-success="upSuccess">
-          <video v-if="form.resources"  :src="form.resources" controls="controls" />
+          <video v-if="showRouse || form.resources"  :src="form.resources" controls="controls" />
           <i v-else class="el-icon-plus avatar-uploader-icon"></i>
         </el-upload>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="onSubmit('ruleForm')">立即发布</el-button>
+        <el-button type="primary" @click="onSubmit('ruleForm')">确定</el-button>
         <el-button @click="resetForm('ruleForm')">取消</el-button>
       </el-form-item>
     </el-form>
@@ -57,11 +57,13 @@ export default {
   },
   data () {
     return {
+      showImage: false,
+      showRouse: false,
       selectData: [
         { lable: '电影', val: 100 },
         { lable: '诗句', val: 200 },
         { lable: '音乐', val: 300 },
-        { lable: '音乐', val: 500 }
+        { lable: '视频', val: 500 }
       ],
       rules: {
         title: [
@@ -91,8 +93,10 @@ export default {
     upSuccess (res, file) {
       this.type = file.raw.type
       if (this.type.indexOf('image/') > -1) {
+        this.showImage = true
         this.form.bgImage = res.data.url
       } else {
+        this.showRouse = true
         this.form.resources = res.data.url
       }
     },
@@ -107,6 +111,8 @@ export default {
       })
     },
     resetForm (formName) {
+      this.showRouse = false
+      this.showImage = false
       this.$refs[formName].resetFields()
       this.$emit('closePop')
     }

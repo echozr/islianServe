@@ -1,153 +1,249 @@
 <template>
-  <div class="home">
-    <el-form ref="form" :model="form" label-width="80px">
-      <el-form-item label="标题">
-        <el-input v-model="form.title"></el-input>
-      </el-form-item>
-      <el-form-item label="内容">
-        <el-input v-model="form.content"></el-input>
-      </el-form-item>
-      <el-form-item label="类型">
-        <el-select v-model="form.addType" placeholder="请选择类型" style="float:left">
-          <el-option label="电影" value="movie"></el-option>
-          <el-option label="诗句" value="verse"></el-option>
-          <el-option label="音乐" value="music"></el-option>
-          <el-option label="视频" value="video"></el-option>
-          <el-option label="书籍" value="book"></el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item label="选择时间">
-        <el-col>
-          <el-date-picker type="month" placeholder="选择时间" v-model="form.creationTime" style="width: 100%;"></el-date-picker>
-        </el-col>
-      </el-form-item>
-      <el-form-item label="添加图片">
-        <el-upload class="avatar-uploader" :headers="headers"  action="/api/upload/fileImg" :show-file-list="false"  accept="image/*" :on-success="upSuccess">
-          <img v-if="form.bgImage" :src="form.bgImage" class="avatar">
-          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-        </el-upload>
-      </el-form-item>
-      <el-form-item label="添加资源" v-show="form.addType === 'music' || form.addType === 'video'">
-        <el-upload class="avatar-uploader" :headers="headers"  action="/api/upload/fileImg" :show-file-list="false"  accept="audio/mp3 ,audio/mp4, video/mp4  " :on-success="upSuccess">
-          <video v-if="form.resources"  :src="form.resources" controls="controls" />
-          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-        </el-upload>
-      </el-form-item>
-      <div v-show="form.addType === 'book'">
-        <el-form-item label="作者">
-          <el-input v-model="form.author"></el-input>
-        </el-form-item>
-        <el-form-item label="出版社">
-          <el-input v-model="form.publicHouse"></el-input>
-        </el-form-item>
-        <el-form-item label="出版年">
-          <el-input v-model="form.PublicYear"></el-input>
-        </el-form-item>
-        <el-form-item label="页数">
-          <el-input v-model="form.pages"></el-input>
-        </el-form-item>
-        <el-form-item label="定价">
-          <el-input v-model="form.pricing"></el-input>
-        </el-form-item>
-        <el-form-item label="书本类型">
-          <el-select v-model="form.bookType" placeholder="请选择类型" style="float:left">
-            <el-option label="精装" value="movie"></el-option>
-            <el-option label="普装" value="verse"></el-option>
-          </el-select>
-        </el-form-item>
+  <div class="about">
+    <zr-accordion :title="['书籍管理']" iconfont="el-icon-s-management"  />
+    <div class="container">
+      <div class="handle-box">
+        <el-form :inline="true" :model="formInline" class="demo-form-inline">
+          <el-form-item label="标题">
+            <el-input v-model="formInline.title" placeholder="输入标题"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="onSubmit">查询</el-button>
+          </el-form-item>
+        </el-form>
+        <el-button type="success" size="medium" @click="handleAdd"><i class="el-icon-plus el-icon--left"></i>添加书籍</el-button>
       </div>
-      <el-form-item>
-        <el-button type="primary" @click="onSubmit">立即发布</el-button>
-        <el-button>取消</el-button>
-      </el-form-item>
-    </el-form>
-    <!-- 图片放大框 -->
-    <el-dialog :visible.sync="dialogVisible">
-      <img width="100%" :src="dialogImageUrl" alt="">
+      <el-table :data="tableData"  border  class="table" ref="multipleTable"  header-cell-class-name="table-header" >
+          <el-table-column type="index"  :index="indexMethod" label="序号" width="50" align="center"></el-table-column>
+          <el-table-column prop="title" label="标题" align="center"></el-table-column>
+          <el-table-column prop="content" label="内容" align="center">
+            <template slot-scope="scope">
+              {{scope.row.content | showText}}
+            </template>
+          </el-table-column>
+          <el-table-column prop="creationTime" label="创建时间" align="center" width="150"></el-table-column>
+          <el-table-column prop="author" label="作者" align="center" width="120"></el-table-column>
+          <el-table-column prop="publicHouse" label="出版社" align="center" width="150"></el-table-column>
+          <el-table-column prop="bookType" label="装订类型" align="center" width="100">
+            <template slot-scope="scope">{{scope.row.bookType | getBookType}}</template>
+          </el-table-column>
+          <el-table-column prop="pages" label="页数" align="center" width="100"></el-table-column>
+          <el-table-column label="操作" width="180" align="center">
+            <template slot-scope="scope">
+              <el-button
+                  type="text"
+                  icon="el-icon-edit"
+                  @click="handleEdit(scope.$index, scope.row)"
+              >编辑</el-button>
+              <el-button
+                  type="text"
+                  icon="el-icon-delete"
+                  class="red"
+                  @click="handleDelete(scope.$index, scope.row)"
+              >删除</el-button>
+            </template>
+          </el-table-column>
+      </el-table>
+      <div class="paginationWarp">
+          <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="currentPage"
+            :page-sizes="[10, 20, 30, 50]"
+            :page-size="10"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total">
+    </el-pagination>
+      </div>
+    </div>
+    <!-- 新增编辑弹出框 -->
+    <el-dialog :title="title" :visible.sync="dialogFormVisible">
+      <add-book ref="popularInfo" @addPopular='addPopular' @closePop="dialogFormVisible=false" :form="bookForm"/>
     </el-dialog>
   </div>
 </template>
-
 <script>
+import zrAccordion from '../components/all/accordion'
+import addBook from '../components/popular/addBook'
 export default {
-  name: 'home',
   data () {
     return {
-      type: '',
-      form: {
+      currentPage: 1,
+      total: null,
+      formInline: {
         title: '',
-        content: '',
-        addType: '',
-        creationTime: '',
-        bgImage: '',
-        resources: '',
-        author: '',
-        publicHouse: '',
-        PublicYear: '',
-        pages: '',
-        pricing: '',
-        bookType: ''
+        start: '',
+        count: ''
       },
-      dialogImageUrl: '',
-      dialogVisible: false,
-      disabled: false,
-      headers: {
-        Authorization: 'Bearer ' + sessionStorage.getItem('token')
-      }
+      tableData: [],
+      dialogFormVisible: false,
+      title: '添加书籍',
+      bookForm: {},
+      bookId: '',
+      isEdit: false
     }
   },
+  created () {
+    this.getPopularList(this.formInline)
+  },
   methods: {
-    handleRemove (file) {
-      console.log(file)
-    },
-    handlePictureCardPreview (file) {
-      this.dialogImageUrl = file.url
-      this.dialogVisible = true
-    },
-    handleDownload (file) {
-      console.log(file)
-    },
-    upSuccess (res, file) {
-      this.type = file.raw.type
-      if (this.type.indexOf('image/') > -1) {
-        this.form.bgImage = res.data.url
-      } else {
-        this.form.resources = res.data.url
-      }
-      console.log(file)
-    },
+    // 点击查询
     onSubmit () {
-      console.log(this.data.form)
+      this.getPopularList(this.formInline)
+    },
+    // 点击新增
+    handleAdd () {
+      !this.isEdit || this.$refs.popularInfo.resetForm('ruleForm')
+      this.isEdit = false
+      this.dialogFormVisible = true
+      this.title = '添加期刊'
+    },
+    // 点击编辑
+    handleEdit (index, row) {
+      this.dialogFormVisible = true
+      this.isEdit = true
+      this.title = '编辑期刊'
+      this.getBookInfoById({ id: row.id })
+    },
+    // 点击删除
+    handleDelete (index, row) {
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.deletePopular({ id: row.id })
+      })
+    },
+    // 新增书籍
+    async addPopular (value) {
+      const _this = this
+      console.log(value)
+      Object.assign(value, { addType: 400 })
+      if (!this.isEdit) { // 新增
+        const result = await this.$tools.awaitWrap(this.$axios.popular.addBook(value), _this)
+        if (result.data) {
+          const { data, code } = result.data
+          if (code === 200) {
+            this.getPopularList()
+            this.$notify({
+              title: '成功',
+              message: data,
+              type: 'success',
+              position: 'bottom-right'
+            })
+          }
+        }
+      } else { // 编辑
+        const params = {
+          id: this.bookId
+        }
+        Object.assign(params, value)
+        const result = await this.$tools.awaitWrap(this.$axios.popular.updateBook(params), _this)
+        if (result.data) {
+          const { data, code } = result.data
+          if (code === 200) {
+            this.$notify({
+              title: '成功',
+              message: data,
+              type: 'success',
+              position: 'bottom-right'
+            })
+            this.getPopularList()
+          }
+        }
+      }
+      this.dialogFormVisible = false
+    },
+    // 获取列表
+    async getPopularList (params) {
+      const _this = this
+      const loading = this.$loading({
+        lock: true,
+        text: 'Loading',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      })
+      const result = await this.$tools.awaitWrap(this.$axios.popular.getBookList(params), _this)
+      if (result.data) {
+        const { data, code } = result.data
+        if (code === 200) {
+          loading.close()
+          this.tableData = data.list
+          this.total = data.total
+          this.formInline.count = data.count
+          this.formInline.start = data.start
+        }
+      }
+    },
+    // 删除书籍
+    async deletePopular (params) {
+      const _this = this
+      const result = await this.$tools.awaitWrap(this.$axios.popular.deleteBooks(params), _this)
+      if (result.data) {
+        const { data, code } = result.data
+        if (code === 200) {
+          this.$notify({
+            title: '成功',
+            message: data,
+            type: 'success',
+            position: 'bottom-right'
+          })
+          this.getPopularList()
+        }
+      }
+    },
+    // 获取期刊详情
+    async getBookInfoById (params) {
+      const _this = this
+      const result = await this.$tools.awaitWrap(this.$axios.popular.getBookInfoById(params), _this)
+      if (result.data) {
+        const { data, code } = result.data
+        if (code === 200) {
+          const { title, addType, content, creationTime, bgImage, id, author, publicHouse, PublicYear, pages, pricing, bookType } = data
+          this.bookForm = {
+            title,
+            addType,
+            content,
+            creationTime,
+            bgImage,
+            author,
+            publicHouse,
+            PublicYear,
+            pages: Number(pages),
+            pricing: Number(pricing),
+            bookType
+          }
+          this.bookId = id
+        }
+      }
+    },
+    // 分页size切换
+    handleSizeChange (val) {
+      this.formInline.count = val
+      this.getPopularList(this.formInline)
+      console.log(`每页 ${val} 条`)
+    },
+    // 分页切换
+    handleCurrentChange (val) {
+      this.formInline.start = val - 1
+      this.getPopularList(this.formInline)
+      console.log(`当前页: ${val}`)
+    },
+    // 设置序号
+    indexMethod (index) {
+      return this.formInline.count * this.formInline.start + (index + 1)
     }
+  },
+  components: {
+    zrAccordion,
+    addBook
   }
 }
 </script>
-
 <style lang="less" scoped>
-.home{
-  padding: 30px;
+.red{
+  color: red;
 }
-.avatar-uploader .el-upload {
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid #d9d9d9;
-    border-radius: 6px;
-  }
-  .avatar-uploader .el-upload:hover {
-    border-color: #409EFF;
-  }
-  .avatar-uploader-icon {
-    font-size: 28px;
-    color: #8c939d;
-    width: 178px;
-    height: 178px;
-    line-height: 178px;
-    text-align: center;
-  }
-  .avatar {
-    width: 178px;
-    height: 178px;
-    display: block;
-  }
+
 </style>

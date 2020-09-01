@@ -26,8 +26,27 @@ const popular = {
   // 修改期刊
   updatePopular (params) {
     return axios.post(`${base.api}/popular/updatePopular`, qs.stringify(params))
+  },
+  // 添加书籍
+  addBook (params) {
+    return axios.post(`${base.api}/books/addBooks`, qs.stringify(params))
+  },
+  // 获取书籍列表
+  getBookList (params) {
+    return axios.get(`${base.api}/books/getBookList`, { params })
+  },
+  // 删除书籍
+  deleteBooks (params) {
+    return axios.delete(`${base.api}/books/deleteBooks`, { params })
+  },
+  // 根据ID获取书籍详情
+  getBookInfoById (params) {
+    return axios.get(`${base.api}/books/getBookInfoByID`, { params })
+  },
+  // 编辑书籍
+  updateBook (params) {
+    return axios.post(`${base.api}/books/updateBook`, qs.stringify(params))
   }
-
 }
 
 export default popular
